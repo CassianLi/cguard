@@ -1,0 +1,42 @@
+port: 7004
+
+log:
+  # logging level
+  level: info
+  # logging dir
+  log-base: /var/log
+
+# Import XML save directory
+import-dir:
+
+# Customs declaration file monitoring queue
+rabbitmq:
+  url: amqp://USER:PASSWORD@HOST:5672
+  exchange: customs.lwt.direct
+  exchange-type: direct
+  queue:
+    # lwt request queue name
+    lwt-req: customs.lwt.request
+    # lwt response queue name
+    lwt-res: customs.lwt.response
+
+mysql:
+  driver: mysql
+  url: 'USER:PASSWORD@tcp(HOST:PORT)/DATABASE'
+  # connection max life time: default 3 minutes
+  max-life-time: 3
+  # max open connections: default 10
+  max-open-connections: 10
+  # max idle connections: default 10
+  max-idle-connections: 10
+
+# The path of lwt template
+lwt:
+  template:
+    amazon: out/template/amazon.xlsx
+    ebay: out/template/ebay.xlsx
+    c_discount: out/template/cdiscount.xlsx
+  tmp:
+    # LWT file save root directory
+    dir: out/tmp
+

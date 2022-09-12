@@ -1,0 +1,19 @@
+./**
+../**
+.git/**
+.idea/**
+.cguard-test.yaml
+.DS_Store
+
+**test**
+**local**
+**dev**
+**.sum
+
+
+
+dist/
+/cguard
+
+# Project exclude paths
+/out/
