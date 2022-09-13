@@ -33,9 +33,14 @@ mysql:
 # The path of lwt template
 lwt:
   template:
-    amazon: out/template/amazon.xlsx
-    ebay: out/template/ebay.xlsx
-    c_discount: out/template/cdiscount.xlsx
+    official:
+      amazon: out/template/amazon.xlsx
+      ebay: out/template/ebay.xlsx
+      c_discount: out/template/cdiscount.xlsx
+    brief:
+      amazon: out/template/brief_amazon.xlsx
+      ebay: out/template/brief_ebay.xlsx
+      c_discount: out/template/brief_cdiscount.xlsx
   tmp:
     # LWT file save root directory
     dir: out/tmp

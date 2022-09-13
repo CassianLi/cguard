@@ -24,7 +24,7 @@ Flags:
 
  
 
-- 配置参数
+- 配置文件`.cguard.yaml`
 
 ```yaml
 port: 7004
@@ -62,12 +62,18 @@ mysql:
 # The path of lwt template
 lwt:
   template:
-    amazon: out/template/amazon.xlsx
-    ebay: out/template/ebay.xlsx
-    c_discount: out/template/cdiscount.xlsx
+    official:
+      amazon: out/template/amazon.xlsx
+      ebay: out/template/ebay.xlsx
+      c_discount: out/template/cdiscount.xlsx
+    brief:
+      amazon: out/template/brief_amazon.xlsx
+      ebay: out/template/brief_ebay.xlsx
+      c_discount: out/template/brief_cdiscount.xlsx
   tmp:
     # LWT file save root directory
     dir: out/tmp
+
 
 ```
 
@@ -92,7 +98,23 @@ $$
 
 
 
-## LWT 生成结果
+## LWT 生成
+
+`lwt` 制作请求，通过将需要制作`lwt` 的报关单单号发送到指定的消息队列来生成。
+
+- `RequestLwt`
+
+```go
+type RequestForLwt struct {
+	CustomsId string `json:"customs_id"`
+	Brief     bool   `json:"brief"`
+}
+```
+
+| 参数       | 值          | 说明             |
+| ---------- | ----------- | ---------------- |
+| customs_id | OP210603005 | 报关单号         |
+| Brief      | Boolean     | 是否为Brief  LWT |
 
 `lwt` 文件的生成结果通过监听队列`rqbbitmq.queue.lwt-res`变量指定的队列名获取。通过返回的数据内容，业务放自行保存`lwt` 业务状态及`lwt`文件名
 
@@ -112,6 +134,7 @@ type ResponseForLwt struct {
 | status       | Success \| failed               | L WT 是否成功          |
 | lwt_filename | OP210603005_20220912104816.xlsx | LWT文件名              |
 | error        | -                               | 如果失败，返回错误信息 |
+| Brief        | Boolean                         | 是否为Brief  LWT       |
 
 - json exp:
 
