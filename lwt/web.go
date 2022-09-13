@@ -11,7 +11,18 @@ import (
 	"time"
 )
 
-// DownloadLwtExcel download lwt excel file
+// DownloadLwtExcel
+// Download excel for LWT
+// @Summary      Download excel for LWT
+// @Description  get file by filename
+// @Tags         lwt
+// @Accept       json
+// @Produce      json
+// @Param        filename   path      string  true  "LWT filename"
+// @Param 		 download   query 	  int false "Download file"
+// @Success      200
+// @Failure      400
+// @Router       /lwt/{filename} [get]
 func DownloadLwtExcel(c echo.Context) error {
 	tmpDir := viper.GetString("lwt.tmp.dir")
 	if !utils.IsDir(tmpDir) {

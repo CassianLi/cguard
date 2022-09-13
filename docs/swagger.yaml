@@ -1,0 +1,29 @@
+info:
+  contact: {}
+paths:
+  /lwt/{filename}:
+    get:
+      consumes:
+      - application/json
+      description: get file by filename
+      parameters:
+      - description: LWT filename
+        in: path
+        name: filename
+        required: true
+        type: string
+      - description: Download file
+        in: query
+        name: download
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+      summary: Download excel for LWT
+      tags:
+      - lwt
+swagger: "2.0"

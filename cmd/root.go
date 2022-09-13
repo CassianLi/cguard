@@ -12,8 +12,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	echoSwagger "github.com/swaggo/echo-swagger"
 	"os"
 	"path/filepath"
+	_ "sysafari.com/customs/cguard/docs"
 	"sysafari.com/customs/cguard/logging"
 	"sysafari.com/customs/cguard/lwt"
 	"sysafari.com/customs/cguard/rabbit"
@@ -44,8 +46,24 @@ the data files or view files of various report types that need to be generated. 
 }
 
 // echoRoutes Set echo routes
+// @title LWT web service
+// @version 1.0
+// @description This is a simple web service that provides download lwt file
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name Joker
+// @contact.email ljr@y-clouds.com
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:7004
+// @BasePath /v2
 func echoRoutes() {
 	e := echo.New()
+	// swagger
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
 	// api exp:
 	// http://localhost:{port}/lwt/OP210603005_20220909153131.xlsx?download=1
 	e.GET("/lwt/:filename", lwt.DownloadLwtExcel)
