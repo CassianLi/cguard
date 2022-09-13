@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/xuri/excelize/v2"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sysafari.com/customs/cguard/rabbit"
@@ -156,9 +157,8 @@ func generateExcelForOfficialLWT(rows []ExcelColumnForLwt) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	lfp := strings.Split(lwtFilePath, "/")
 
-	return lfp[len(lfp)-1], nil
+	return filepath.Base(lwtFilePath), nil
 }
 
 // GenerateLWTExcel generate excel file for LWT,
@@ -176,9 +176,8 @@ func generateExcelForBriefLWT(rows []ExcelColumnForBriefLwt) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	lfp := strings.Split(lwtFilePath, "/")
 
-	return lfp[len(lfp)-1], nil
+	return filepath.Join(lwtFilePath), nil
 }
 
 // readyFowLwtFile Prepare Lwt file
@@ -207,16 +206,17 @@ func readyFowLwtFile(customId string, salesChannel string, brief bool) (string, 
 
 	now := time.Now()
 	timestamp := now.Format(TimeLayout)
-	saveDir := fmt.Sprintf("%s/%d/%d", tmpDir, now.Year(), now.Month())
+	saveDir := filepath.Join(tmpDir, strconv.Itoa(now.Year()), strconv.Itoa(int(now.Month())))
 	if !utils.IsDir(saveDir) && !utils.CreateDir(saveDir) {
 		return "", errors.New(fmt.Sprintf("Create save dir: %s failed !", saveDir))
 	}
 	var lwtFilePath string
 	if brief {
-		lwtFilePath = fmt.Sprintf("%s/brief_lwt_%s_%s.xlsx", saveDir, customId, timestamp)
+		lwtFilePath = filepath.Join(saveDir, fmt.Sprintf("brief_lwt_%s_%s.xlsx", customId, timestamp))
 	} else {
-		lwtFilePath = fmt.Sprintf("%s/lwt_%s_%s.xlsx", saveDir, customId, timestamp)
+		lwtFilePath = filepath.Join(saveDir, fmt.Sprintf("lwt_%s_%s.xlsx", customId, timestamp))
 	}
+	fmt.Println("lwtFilePath: ", lwtFilePath)
 
 	err := utils.Copy(templatePath, lwtFilePath)
 	if err != nil {
