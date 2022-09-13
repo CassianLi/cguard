@@ -126,6 +126,7 @@ type ResponseForLwt struct {
 	Status      string `json:"status"`
 	LwtFilename string `json:"lwt_filename"`
 	Error       string `json:"errors"`
+	Brief       bool   `json:"brief"`
 }
 ```
 
@@ -139,6 +140,11 @@ type ResponseForLwt struct {
 - json exp:
 
 ```json
-{\"status\":\"success\",\"lwt_filename\":\"OP210603005_20220912130914.xlsx\",\"errors\":\"\"}
+{
+  "status": "success",
+  "lwt_filename": "OP210603005_20220912130914.xlsx",
+  "errors": "",
+  "brief": true
+}
 ```
 
