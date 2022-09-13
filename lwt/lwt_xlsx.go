@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/xuri/excelize/v2"
+	"strconv"
 	"strings"
 	"sysafari.com/customs/cguard/rabbit"
 	"sysafari.com/customs/cguard/utils"
@@ -22,33 +23,55 @@ const (
 
 // GenerateLWTExcel generate excel file for LWT
 func GenerateLWTExcel(data string) {
-	var process []ExcelColumnForLwt
-	err := Db.Select(&process, QueryLwtData, data)
-
 	response := &ResponseForLwt{
 		Status:      "failed",
 		LwtFilename: "",
 		Error:       "",
 	}
+	requestForLwt, err := deserializeRequest(data)
+	response.Brief = requestForLwt.Brief
+
 	if err != nil {
-		response.Error = fmt.Sprintf("Query lwt data failed, err:%v", err)
+		response.Error = fmt.Sprintf("Deserialization of MQ message failed, err:%v", err)
 	} else {
-		if len(process) > 0 {
-			lwtFilename, err := generateExcelForLWT(process)
-			if err != nil {
-				response.Error = fmt.Sprintf("Generate LWT excel failed,err:%v", err)
-			} else {
-				response.Status = "success"
-				response.LwtFilename = lwtFilename
-				response.Error = ""
-			}
+
+		var lwtFilename string
+		if requestForLwt.Brief {
+			lwtFilename, err = makeBriefLWT(requestForLwt.CustomsId)
 		} else {
-			response.Error = fmt.Sprintf("Query lwt data result is empty.")
+			lwtFilename, err = makeOfficialLWT(requestForLwt.CustomsId)
 		}
+
+		if err != nil {
+			response.Error = fmt.Sprintf("Generate LWT excel failed,err:%v", err)
+		} else {
+			response.Status = "success"
+			response.LwtFilename = lwtFilename
+			response.Error = ""
+		}
+
 	}
 	// pub to  rabbitmq
 	publishLwtResult(response)
+}
 
+// deserializeRequest is used to deserialize rabbitmq request
+func deserializeRequest(message string) (RequestForLwt, error) {
+	fmt.Printf("RequestForLwt: %v\n", message)
+
+	msg, err := strconv.Unquote(message)
+	fmt.Println("msg:", msg)
+
+	req := RequestForLwt{}
+	if err != nil {
+		err = json.Unmarshal([]byte(message), &req)
+	} else {
+		err = json.Unmarshal([]byte(msg), &req)
+	}
+	if err != nil {
+		return req, err
+	}
+	return req, nil
 }
 
 func publishLwtResult(res *ResponseForLwt) {
@@ -68,13 +91,63 @@ func publishLwtResult(res *ResponseForLwt) {
 	}
 }
 
+// makeOfficialLWT Make official LWT Excel file
+func makeOfficialLWT(customsId string) (string, error) {
+	var rows []ExcelColumnForLwt
+	err := Db.Select(&rows, QueryLwtData, customsId)
+	if err != nil {
+		return "", err
+	}
+
+	if len(rows) == 0 {
+		return "", errors.New("cant not query rows for lwt")
+	}
+	return generateExcelForOfficialLWT(rows)
+}
+
+// makeBriefLWT
+func makeBriefLWT(customsId string) (string, error) {
+	var rows []ExcelColumnForBriefLwt
+	err := Db.Select(&rows, QueryBriefLwtData, customsId)
+	if err != nil {
+		return "", err
+	}
+
+	if len(rows) == 0 {
+		return "", errors.New("cant not query rows for lwt")
+	}
+
+	var billPlat BillNoAndPlatForCustoms
+	err = Db.Get(&billPlat, QueryPlatAndBillNo, customsId)
+	if err != nil {
+		return "", err
+	}
+
+	var tk TrackingNoForCustoms
+	err = Db.Get(&tk, QueryFirstTrackingNumber, customsId)
+	if err != nil {
+		return "", err
+	}
+	for i := 0; i < len(rows); i++ {
+		row := rows[i]
+		row.BillNo = billPlat.BillNo
+		row.PlatoNo = billPlat.PlatoNo
+		row.TrackingNo = tk.TrackingNo
+		rows[i] = row
+	}
+
+	fmt.Println(rows)
+
+	return generateExcelForBriefLWT(rows)
+}
+
 // GenerateLWTExcel generate excel file for LWT,
 // error =nil returns lwt file link(oss)
-func generateExcelForLWT(rows []ExcelColumnForLwt) (string, error) {
+func generateExcelForOfficialLWT(rows []ExcelColumnForLwt) (string, error) {
 	customId := rows[0].CustomsId
 	salesChannel := rows[0].SalesChannel
 
-	lwtFilePath, err := readyFowLwtFile(customId, salesChannel)
+	lwtFilePath, err := readyFowLwtFile(customId, salesChannel, false)
 	if err != nil {
 		return "", err
 	}
@@ -88,10 +161,37 @@ func generateExcelForLWT(rows []ExcelColumnForLwt) (string, error) {
 	return lfp[len(lfp)-1], nil
 }
 
+// GenerateLWTExcel generate excel file for LWT,
+// error =nil returns lwt file link(oss)
+func generateExcelForBriefLWT(rows []ExcelColumnForBriefLwt) (string, error) {
+	customId := rows[0].CustomsId
+	salesChannel := rows[0].SalesChannel
+
+	lwtFilePath, err := readyFowLwtFile(customId, salesChannel, true)
+	if err != nil {
+		return "", err
+	}
+
+	err = fillBriefLwtExcel(lwtFilePath, rows)
+	if err != nil {
+		return "", err
+	}
+	lfp := strings.Split(lwtFilePath, "/")
+
+	return lfp[len(lfp)-1], nil
+}
+
 // readyFowLwtFile Prepare Lwt file
-func readyFowLwtFile(customId string, salesChannel string) (string, error) {
-	templatePath := viper.GetString("lwt.template." + strings.ToLower(salesChannel))
+func readyFowLwtFile(customId string, salesChannel string, brief bool) (string, error) {
+	var templateType string
+	if brief {
+		templateType = "brief"
+	} else {
+		templateType = "official"
+	}
+	templatePath := viper.GetString(fmt.Sprintf("lwt.template.%s.%s", templateType, strings.ToLower(salesChannel)))
 	fmt.Println("templatePath", templatePath)
+
 	if templatePath == "" {
 		return "", errors.New(fmt.Sprintf("SalesChannel: %s not supports to LWT.", salesChannel))
 	}
@@ -111,7 +211,13 @@ func readyFowLwtFile(customId string, salesChannel string) (string, error) {
 	if !utils.IsDir(saveDir) && !utils.CreateDir(saveDir) {
 		return "", errors.New(fmt.Sprintf("Create save dir: %s failed !", saveDir))
 	}
-	lwtFilePath := fmt.Sprintf("%s/%s_%s.xlsx", saveDir, customId, timestamp)
+	var lwtFilePath string
+	if brief {
+		lwtFilePath = fmt.Sprintf("%s/brief_lwt_%s_%s.xlsx", saveDir, customId, timestamp)
+	} else {
+		lwtFilePath = fmt.Sprintf("%s/lwt_%s_%s.xlsx", saveDir, customId, timestamp)
+	}
+
 	err := utils.Copy(templatePath, lwtFilePath)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Create lwt file: %s form template file: %s failed!", lwtFilePath, templatePath))
@@ -260,6 +366,85 @@ func fillLwtExcel(lwtFilePath string, rows []ExcelColumnForLwt) error {
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AZ%d", rowNumber), fmt.Sprintf("=AW%d*AX%d", rowNumber, rowNumber), styleFormula)
 
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("BA%d", rowNumber), fmt.Sprintf("=AW%d*D%d", rowNumber, rowNumber), styleFormula)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Save the spreadsheet with the origin path.
+	if err = f.Save(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// fillBriefLwtExcel
+func fillBriefLwtExcel(lwtFilePath string, rows []ExcelColumnForBriefLwt) error {
+	f, err := excelize.OpenFile(lwtFilePath)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer func() {
+		// Close the spreadsheet.
+		if err := f.Close(); err != nil {
+		}
+	}()
+
+	f.SetActiveSheet(SheetIndex)
+
+	sheetName := f.GetSheetName(SheetIndex)
+
+	fmt.Printf("sheetName: %s\n", sheetName)
+
+	styleFormula, err := f.NewStyle(&excelize.Style{Border: border, Alignment: alignment, DecimalPlaces: FloatDecimalPlaces})
+	style, err := f.NewStyle(&excelize.Style{Border: border, Alignment: alignment})
+
+	if err != nil {
+		log.Errorf("Create excel syle failed: %v", err)
+	} else {
+		for i := 0; i < len(rows); i++ {
+			rowNumber := InsertRowFirst + i
+
+			err = f.InsertRow(sheetName, rowNumber)
+			row := rows[i]
+
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("A%d", rowNumber), row.ItemNumber, style)
+			billNo := ""
+			if row.BillNo.Valid {
+				billNo = row.BillNo.String
+			}
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("B%d", rowNumber), billNo, style)
+
+			platNo := ""
+			if row.PlatoNo.Valid {
+				platNo = row.PlatoNo.String
+			}
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("C%d", rowNumber), platNo, style)
+
+			trackingNo := ""
+			if row.TrackingNo.Valid {
+				trackingNo = row.TrackingNo.String
+			}
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("D%d", rowNumber), trackingNo, style)
+
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("E%d", rowNumber), row.ProductNo, style)
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("F%d", rowNumber), row.Description, style)
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("G%d", rowNumber), row.Quantity, style)
+
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("H%d", rowNumber), row.NetWeight, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("I%d", rowNumber), row.Height, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("J%d", rowNumber), row.Width, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("K%d", rowNumber), row.Length, styleFormula)
+
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("L%d", rowNumber), fmt.Sprintf("=(I%d*J%d*K%d)/1000000", rowNumber, rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("M%d", rowNumber), fmt.Sprintf("=L%d*35.315", rowNumber), styleFormula)
+
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("N%d", rowNumber), row.Country, style)
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("O%d", rowNumber), row.HsCode, style)
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("P%d", rowNumber), row.WebLink, style)
+
 			if err != nil {
 				return err
 			}

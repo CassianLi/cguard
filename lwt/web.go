@@ -50,7 +50,8 @@ func DownloadLwtExcel(c echo.Context) error {
 
 func getFilePath(rootDir string, filename string) (string, error) {
 	fn := strings.Split(filename, ".")[0]
-	timestamp := strings.Split(fn, "_")[1]
+	paths := strings.Split(fn, "_")
+	timestamp := paths[len(paths)-1]
 	if timestamp == "" {
 		return "", errors.New(fmt.Sprintf("The filename:%s cannot get timestamp.", filename))
 	}
