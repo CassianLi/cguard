@@ -33,7 +33,7 @@ log:
   # logging level
   level: info
   # logging dir
-  log-base: /var/log
+  log-base: /var/log/cguard
 
 # Import XML save directory
 import-dir:
@@ -63,13 +63,13 @@ mysql:
 lwt:
   template:
     official:
-      amazon: out/template/amazon.xlsx
-      ebay: out/template/ebay.xlsx
-      c_discount: out/template/cdiscount.xlsx
+      amazon: template/amazon.xlsx
+      ebay: template/ebay.xlsx
+      c_discount: template/cdiscount.xlsx
     brief:
-      amazon: out/template/brief_amazon.xlsx
-      ebay: out/template/brief_ebay.xlsx
-      c_discount: out/template/brief_cdiscount.xlsx
+      amazon: template/brief_amazon.xlsx
+      ebay: template/brief_ebay.xlsx
+      c_discount: template/brief_cdiscount.xlsx
   tmp:
     # LWT file save root directory
     dir: out/tmp
@@ -133,7 +133,7 @@ type ResponseForLwt struct {
 | 参数         | 值                              | 说明                   |
 | ------------ | ------------------------------- | ---------------------- |
 | status       | Success \| failed               | L WT 是否成功          |
-| lwt_filename | OP210603005_20220912104816.xlsx | LWT文件名              |
+| lwt_filename | LWT_OP210603005_20220920093451.xlsx| LWT文件名              |
 | error        | -                               | 如果失败，返回错误信息 |
 | Brief        | Boolean                         | 是否为Brief  LWT       |
 

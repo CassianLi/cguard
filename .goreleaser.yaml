@@ -23,6 +23,7 @@ archives:
       - goos: windows
         format: zip
     files:
+      - template/
       - .cguard.yaml
       - README.md
 checksum:

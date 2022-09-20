@@ -169,7 +169,7 @@ func initLogging() {
 	path, _ := os.Executable()
 	_, exec := filepath.Split(path)
 	fmt.Println(exec)
-	logfile := fmt.Sprintf("%s/%s.log", viper.GetString("log.log-base"), exec)
+	logfile := filepath.Join(viper.GetString("log.log-base"), exec+".log")
 
 	logging.InitLog(logfile, viper.GetString("log.level"))
 }

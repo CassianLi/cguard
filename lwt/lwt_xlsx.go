@@ -212,9 +212,9 @@ func readyFowLwtFile(customId string, salesChannel string, brief bool) (string, 
 	}
 	var lwtFilePath string
 	if brief {
-		lwtFilePath = filepath.Join(saveDir, fmt.Sprintf("brief_lwt_%s_%s.xlsx", customId, timestamp))
+		lwtFilePath = filepath.Join(saveDir, fmt.Sprintf("BRIEF_LWT_%s_%s.xlsx", customId, timestamp))
 	} else {
-		lwtFilePath = filepath.Join(saveDir, fmt.Sprintf("lwt_%s_%s.xlsx", customId, timestamp))
+		lwtFilePath = filepath.Join(saveDir, fmt.Sprintf("LWT_%s_%s.xlsx", customId, timestamp))
 	}
 	fmt.Println("lwtFilePath: ", lwtFilePath)
 
