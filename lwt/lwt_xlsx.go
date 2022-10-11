@@ -46,6 +46,7 @@ func GenerateLWTExcel(data string) {
 		if err != nil {
 			response.Error = fmt.Sprintf("Generate LWT excel failed,err:%v", err)
 		} else {
+			response.CustomsId = requestForLwt.CustomsId
 			response.Status = "success"
 			response.LwtFilename = lwtFilename
 			response.Error = ""
@@ -177,7 +178,7 @@ func generateExcelForBriefLWT(rows []ExcelColumnForBriefLwt) (string, error) {
 		return "", err
 	}
 
-	return filepath.Join(lwtFilePath), nil
+	return filepath.Base(lwtFilePath), nil
 }
 
 // readyFowLwtFile Prepare Lwt file

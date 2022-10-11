@@ -88,6 +88,7 @@ type TrackingNoForCustoms struct {
 
 // ResponseForLwt response for Lwt request
 type ResponseForLwt struct {
+	CustomsId   string `json:"customs_id"`
 	Status      string `json:"status"`
 	LwtFilename string `json:"lwt_filename"`
 	Error       string `json:"errors"`
