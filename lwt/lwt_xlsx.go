@@ -330,8 +330,8 @@ func fillLwtExcel(lwtFilePath string, rows []ExcelColumnForLwt) error {
 			// profit
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AI%d", rowNumber), row.ProfitRate, styleFormula)
 
-			profitFormula := fmt.Sprintf("=Round(AI%d*(Q%d-S%d-V%d-W%d-X%d-Z%d-AB%d-AE%d-AG%d),6)",
-				rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber)
+			profitFormula := fmt.Sprintf("=Round(AI%d*(Q%d-S%d-V%d-W%d-X%d-Z%d-AB%d-AD%d-AE%d-AG%d-AH%d),6)",
+				rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AJ%d", rowNumber), profitFormula, styleFormula)
 
 			// local cost
