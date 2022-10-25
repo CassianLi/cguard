@@ -286,8 +286,8 @@ func fillLwtExcel(lwtFilePath string, rows []ExcelColumnForLwt) error {
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("G%d", rowNumber), row.Width, styleFormula)
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("H%d", rowNumber), row.Length, styleFormula)
 
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("I%d", rowNumber), fmt.Sprintf("=(F%d*G%d*H%d)/1000000", rowNumber, rowNumber, rowNumber), styleFormula)
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("J%d", rowNumber), fmt.Sprintf("=I%d*35.315", rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("I%d", rowNumber), fmt.Sprintf("=Round((F%d*G%d*H%d)/1000000,6)", rowNumber, rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("J%d", rowNumber), fmt.Sprintf("=Round(I%d*35.315,6)", rowNumber), styleFormula)
 
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("K%d", rowNumber), row.Country, style)
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("L%d", rowNumber), row.HsCode, style)
@@ -301,72 +301,72 @@ func fillLwtExcel(lwtFilePath string, rows []ExcelColumnForLwt) error {
 
 			// marketplace
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("R%d", rowNumber), row.EuVatRate, styleFormula)
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("S%d", rowNumber), fmt.Sprintf("=Q%d*(1-1/(1+R%d))", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("S%d", rowNumber), fmt.Sprintf("=Round(Q%d*(1-1/(1+R%d)), 6)", rowNumber, rowNumber), styleFormula)
 
 			// platform cost
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("T%d", rowNumber), row.ReferralFeeRate, styleFormula)
 
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("U%d", rowNumber), fmt.Sprintf("=T%d", rowNumber), stylePercent)
 
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("V%d", rowNumber), fmt.Sprintf("=T%d*Q%d", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("V%d", rowNumber), fmt.Sprintf("=Round(T%d*Q%d,6)", rowNumber, rowNumber), styleFormula)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("W%d", rowNumber), row.ClosingFee, styleFormula)
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("X%d", rowNumber), row.HighVolumeListingFee, styleFormula)
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("Y%d", rowNumber), row.ProcessingFeeRate, styleFormula)
 
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("Z%d", rowNumber), fmt.Sprintf("=Y%d*Q%d", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("Z%d", rowNumber), fmt.Sprintf("=Round(Y%d*Q%d,6)", rowNumber, rowNumber), styleFormula)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AA%d", rowNumber), row.AuthorisationFee, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AB%d", rowNumber), fmt.Sprintf("=AA%d", rowNumber), styleFormula)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AC%d", rowNumber), row.InterchangeableFeeRate, styleFormula)
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AD%d", rowNumber), fmt.Sprintf("=AC%d*Q%d", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AD%d", rowNumber), fmt.Sprintf("=Round(AC%d*Q%d,6)", rowNumber, rowNumber), styleFormula)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AE%d", rowNumber), row.FulfilmentFee, styleFormula)
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AF%d", rowNumber), row.StorageFeeRate, styleFormula)
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AG%d", rowNumber), fmt.Sprintf("=AF%d*I%d", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AG%d", rowNumber), fmt.Sprintf("=Round(AF%d*I%d,6)", rowNumber, rowNumber), styleFormula)
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AH%d", rowNumber), row.AdvertisingFee, styleFormula)
 
 			// profit
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AI%d", rowNumber), row.ProfitRate, styleFormula)
 
-			profitFormula := fmt.Sprintf("=AI%d*(Q%d-S%d-V%d-W%d-X%d-Z%d-AB%d-AE%d-AG%d)",
+			profitFormula := fmt.Sprintf("=Round(AI%d*(Q%d-S%d-V%d-W%d-X%d-Z%d-AB%d-AE%d-AG%d),6)",
 				rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AJ%d", rowNumber), profitFormula, styleFormula)
 
 			// local cost
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AK%d", rowNumber), row.GroundFeeRate, styleFormula)
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AL%d", rowNumber), fmt.Sprintf("=AK%d*E%d", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AL%d", rowNumber), fmt.Sprintf("=Round(AK%d*E%d,6)", rowNumber, rowNumber), styleFormula)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AM%d", rowNumber), row.WarehouseFeeRate, styleFormula)
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AN%d", rowNumber), fmt.Sprintf("=AM%d*E%d", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AN%d", rowNumber), fmt.Sprintf("=Round(AM%d*E%d,6)", rowNumber, rowNumber), styleFormula)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AO%d", rowNumber), row.ClearanceRate, styleFormula)
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AP%d", rowNumber), fmt.Sprintf("=AO%d*E%d", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AP%d", rowNumber), fmt.Sprintf("=Round(AO%d*E%d,6)", rowNumber, rowNumber), styleFormula)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AQ%d", rowNumber), row.DeliveryRate, styleFormula)
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AR%d", rowNumber), fmt.Sprintf("=AQ%d*E%d", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AR%d", rowNumber), fmt.Sprintf("=Round(AQ%d*E%d,60", rowNumber, rowNumber), styleFormula)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AS%d", rowNumber), row.WithinFeeRate, styleFormula)
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AT%d", rowNumber), fmt.Sprintf("=AS%d*E%d", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AT%d", rowNumber), fmt.Sprintf("=Round(AS%d*E%d,6)", rowNumber, rowNumber), styleFormula)
 
 			// subtotal
-			subtotalFormula := fmt.Sprintf("=AL%d+AN%d+AP%d+AR%d+AT%d", rowNumber, rowNumber, rowNumber, rowNumber, rowNumber)
+			subtotalFormula := fmt.Sprintf("=Round(AL%d+AN%d+AP%d+AR%d+AT%d,6)", rowNumber, rowNumber, rowNumber, rowNumber, rowNumber)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AU%d", rowNumber), subtotalFormula, styleFormula)
 
 			// customs value include duty
-			customsValueIncludeDutyFormula := fmt.Sprintf("=Q%d-(S%d+V%d+Z%d+AB%d+AD%d+AE%d+AG%d+AJ%d+AU%d)",
+			customsValueIncludeDutyFormula := fmt.Sprintf("=Round(Q%d-(S%d+V%d+Z%d+AB%d+AD%d+AE%d+AG%d+AJ%d+AU%d),6)",
 				rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AV%d", rowNumber), customsValueIncludeDutyFormula, styleFormula)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AX%d", rowNumber), row.EuDutyRate, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AY%d", rowNumber), fmt.Sprintf("=AX%d", rowNumber), stylePercent)
 
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AW%d", rowNumber), fmt.Sprintf("=AV%d/(1+AX%d)", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AW%d", rowNumber), fmt.Sprintf("=Round(AV%d/(1+AX%d),6)", rowNumber, rowNumber), styleFormula)
 
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AZ%d", rowNumber), fmt.Sprintf("=AW%d*AX%d", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AZ%d", rowNumber), fmt.Sprintf("=Round(AW%d*AX%d,6)", rowNumber, rowNumber), styleFormula)
 
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("BA%d", rowNumber), fmt.Sprintf("=AW%d*D%d", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("BA%d", rowNumber), fmt.Sprintf("=Round(AW%d*D%d,6)", rowNumber, rowNumber), styleFormula)
 			if err != nil {
 				return err
 			}
