@@ -345,7 +345,7 @@ func fillLwtExcel(lwtFilePath string, rows []ExcelColumnForLwt) error {
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AP%d", rowNumber), fmt.Sprintf("=Round(AO%d*E%d,6)", rowNumber, rowNumber), styleFormula)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AQ%d", rowNumber), row.DeliveryRate, styleFormula)
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AR%d", rowNumber), fmt.Sprintf("=Round(AQ%d*E%d,60", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AR%d", rowNumber), fmt.Sprintf("=Round(AQ%d*E%d,6)", rowNumber, rowNumber), styleFormula)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AS%d", rowNumber), row.WithinFeeRate, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AT%d", rowNumber), fmt.Sprintf("=Round(AS%d*E%d,6)", rowNumber, rowNumber), styleFormula)
