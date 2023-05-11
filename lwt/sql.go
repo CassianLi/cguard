@@ -39,7 +39,7 @@ const (
        scvp.delivery_rate,
        scvp.clearance_rate,
        scvp.ground_fee_rate,
-       scvp.warehouse_fee_rate,
+       if(sca.freight_within_eu_unit>0,sca.freight_within_eu_unit,scvp.warehouse_fee_rate) as warehouse_fee_rate,
        scvp.subtotal,
        scvp.profit_rate,
        scvp.profit,
