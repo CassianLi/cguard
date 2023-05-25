@@ -25,11 +25,11 @@ const (
        scvp.eu_vat_rate,
        scvp.vat_amount,
        scvp.referral_fee_rate,
-#        scvp.processing_fee_rate,
-#        scvp.interchangeable_fee_rate,
-#        scvp.authorisation_fee,
-#        scvp.high_volume_listing_fee,
-#        scvp.advertising_fee,
+       scvp.processing_fee_rate,
+       scvp.interchangeable_fee_rate,
+       scvp.authorisation_fee,
+       scvp.high_volume_listing_fee,
+       scvp.advertising_fee,
        scvp.closing_fee,
        scvp.fulfilment_fee,
        scvp.storage_fee_rate,
@@ -48,24 +48,9 @@ const (
        scvp.customs_value,
        scvp.final_declared_value
 FROM service_customs_article sca
-         LEFT JOIN service_customs_value_process scvp ON sca.customs_value_process_id = scvp.id
+         LEFT JOIN service_declare_value_process scvp ON sca.declare_value_process_id = scvp.id
          LEFT JOIN base_description bd ON scvp.description_id = bd.id
 WHERE sca.customs_id =? ORDER BY sca.item_number;`
-
-	// QueryEcpFeeRate 查询电商平台跟申报国家相关的4个费率
-	QueryEcpFeeRate = `SELECT 
-    declare_country,
-    sales_channel,
-    country,
-    processing_fee_rate,
-       interchangeable_fee_rate,
-       authorisation_fee,
-       high_volume_listing_fee,
-       advertising_fee
-FROM config_ecp_fee_rate
-WHERE declare_country = ?
-  AND sales_channel = ?
-  AND country = ?;`
 
 	// QueryBriefLwtData Query the rows data for brief LWT
 	QueryBriefLwtData = `SELECT sca.customs_id,
