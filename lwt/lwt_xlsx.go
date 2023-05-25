@@ -104,7 +104,24 @@ func makeOfficialLWT(customsId string) (string, error) {
 	if len(rows) == 0 {
 		return "", errors.New("cant not query rows for lwt")
 	}
-	return generateExcelForOfficialLWT(rows)
+	first := rows[0]
+
+	var ecpFeeRate EcpFeeRate
+	if err = Db.Get(&ecpFeeRate, QueryEcpFeeRate, first.DeclareCountry, first.SalesChannel, first.Country); err != nil {
+		return "", errors.New(fmt.Sprintf("cant not query ecp fee rate for lwt, err:%v", err))
+	}
+
+	var newRows []ExcelColumnForLwt
+	for _, row := range rows {
+		row.ProcessingFeeRate = ecpFeeRate.ProcessingFeeRate
+		row.InterchangeableFeeRate = ecpFeeRate.InterchangeableFeeRate
+		row.AuthorisationFee = ecpFeeRate.AuthorisationFee
+		row.HighVolumeListingFee = ecpFeeRate.HighVolumeListingFee
+		row.AdvertisingFee = ecpFeeRate.AdvertisingFee
+		newRows = append(newRows, row)
+	}
+
+	return generateExcelForOfficialLWT(newRows)
 }
 
 // makeBriefLWT

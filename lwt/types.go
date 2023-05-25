@@ -51,6 +51,17 @@ type ExcelColumnForLwt struct {
 	FinalDeclaredValue      float64 `db:"final_declared_value"`
 }
 
+type EcpFeeRate struct {
+	DeclareCountry         sql.NullString `db:"declare_country"`
+	SalesChannel           sql.NullString `db:"sales_channel"`
+	Country                sql.NullString `db:"country"`
+	ProcessingFeeRate      float64        `db:"processing_fee_rate"`
+	InterchangeableFeeRate float64        `db:"interchangeable_fee_rate"`
+	AuthorisationFee       float64        `db:"authorisation_fee"`
+	HighVolumeListingFee   float64        `db:"high_volume_listing_fee"`
+	AdvertisingFee         float64        `db:"advertising_fee"`
+}
+
 // ExcelColumnForBriefLwt customs value Excel data for LWT
 type ExcelColumnForBriefLwt struct {
 	CustomsId       string         `db:"customs_id"`
