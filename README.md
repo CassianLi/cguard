@@ -63,7 +63,7 @@ mysql:
 lwt:
   template:
     official:
-      amazon: template/amazon.xlsx
+      amazon: template/amazon_nl.xlsx
       ebay: template/ebay.xlsx
       c_discount: template/cdiscount.xlsx
     brief:

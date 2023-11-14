@@ -34,9 +34,14 @@ mysql:
 lwt:
   template:
     official:
-      amazon: template/amazon.xlsx
-      ebay: template/ebay.xlsx
-      c_discount: template/cdiscount.xlsx
+      nl:
+        amazon: template/amazon_nl.xlsx
+        ebay: template/ebay.xlsx
+        c_discount: template/cdiscount.xlsx
+      be:
+        amazon: template/amazon_be.xlsx
+        ebay: template/ebay.xlsx
+        c_discount: template/cdiscount.xlsx
     brief:
       amazon: template/brief_amazon.xlsx
       ebay: template/brief_ebay.xlsx

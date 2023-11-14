@@ -147,15 +147,21 @@ func makeBriefLWT(customsId string) (string, error) {
 // GenerateLWTExcel generate excel file for LWT,
 // error =nil returns lwt file link(oss)
 func generateExcelForOfficialLWT(rows []ExcelColumnForLwt) (string, error) {
+	declareCountry := rows[0].DeclareCountry
 	customId := rows[0].CustomsId
 	salesChannel := rows[0].SalesChannel
 
-	lwtFilePath, err := readyFowLwtFile(customId, salesChannel, false)
+	lwtFilePath, err := readyFowLwtFile(declareCountry, customId, salesChannel, false)
 	if err != nil {
 		return "", err
 	}
 
-	err = fillLwtExcel(lwtFilePath, rows)
+	if "BE" == strings.ToUpper(declareCountry) {
+		err = fillLwtExcelForBe(lwtFilePath, rows)
+	} else {
+		err = fillLwtExcelForNl(lwtFilePath, rows)
+	}
+
 	if err != nil {
 		return "", err
 	}
@@ -166,10 +172,11 @@ func generateExcelForOfficialLWT(rows []ExcelColumnForLwt) (string, error) {
 // GenerateLWTExcel generate excel file for LWT,
 // error =nil returns lwt file link(oss)
 func generateExcelForBriefLWT(rows []ExcelColumnForBriefLwt) (string, error) {
+	declareCountry := rows[0].DeclareCountry
 	customId := rows[0].CustomsId
 	salesChannel := rows[0].SalesChannel
 
-	lwtFilePath, err := readyFowLwtFile(customId, salesChannel, true)
+	lwtFilePath, err := readyFowLwtFile(declareCountry, customId, salesChannel, true)
 	if err != nil {
 		return "", err
 	}
@@ -183,14 +190,16 @@ func generateExcelForBriefLWT(rows []ExcelColumnForBriefLwt) (string, error) {
 }
 
 // readyFowLwtFile Prepare Lwt file
-func readyFowLwtFile(customId string, salesChannel string, brief bool) (string, error) {
-	var templateType string
+func readyFowLwtFile(declareCountry, customId, salesChannel string, brief bool) (string, error) {
+	var templateType, templatePath string
 	if brief {
 		templateType = "brief"
+		templatePath = viper.GetString(fmt.Sprintf("lwt.template.%s.%s", templateType, strings.ToLower(salesChannel)))
 	} else {
 		templateType = "official"
+		templatePath = viper.GetString(fmt.Sprintf("lwt.template.%s.%s.%s", templateType, strings.ToLower(declareCountry), strings.ToLower(salesChannel)))
 	}
-	templatePath := viper.GetString(fmt.Sprintf("lwt.template.%s.%s", templateType, strings.ToLower(salesChannel)))
+
 	fmt.Println("templatePath", templatePath)
 
 	if templatePath == "" {
@@ -245,8 +254,8 @@ var font = &excelize.Font{
 	Color: "#F00000",
 }
 
-// fillLwtExcel fill data to lwt excel file
-func fillLwtExcel(lwtFilePath string, rows []ExcelColumnForLwt) error {
+// fillLwtExcelForNl fill data to lwt excel file for NL
+func fillLwtExcelForNl(lwtFilePath string, rows []ExcelColumnForLwt) error {
 	f, err := excelize.OpenFile(lwtFilePath)
 	if err != nil {
 		fmt.Println(err)
@@ -368,6 +377,123 @@ func fillLwtExcel(lwtFilePath string, rows []ExcelColumnForLwt) error {
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AZ%d", rowNumber), fmt.Sprintf("=Round(AW%d*AX%d,6)", rowNumber, rowNumber), styleFormula)
 
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("BA%d", rowNumber), fmt.Sprintf("=Round(AW%d*D%d,6)", rowNumber, rowNumber), styleFormula)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Save the spreadsheet with the origin path.
+	if err = f.Save(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// fillLwtExcelForBe fill data to lwt excel file for BE
+func fillLwtExcelForBe(lwtFilePath string, rows []ExcelColumnForLwt) error {
+	f, err := excelize.OpenFile(lwtFilePath)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer func() {
+		// Close the spreadsheet.
+		if err := f.Close(); err != nil {
+		}
+	}()
+
+	f.SetActiveSheet(SheetIndex)
+
+	sheetName := f.GetSheetName(SheetIndex)
+
+	fmt.Printf("sheetName: %s\n", sheetName)
+
+	styleFormula, err := f.NewStyle(&excelize.Style{Border: border, Alignment: alignment, DecimalPlaces: FloatDecimalPlaces})
+	style, err := f.NewStyle(&excelize.Style{Border: border, Alignment: alignment})
+	stylePercent, err := f.NewStyle(&excelize.Style{Border: border, Alignment: alignment, NumFmt: 10, Font: font})
+
+	if err != nil {
+		log.Errorf("Create excel syle failed: %v", err)
+	} else {
+		for i := 0; i < len(rows); i++ {
+			rowNumber := InsertRowFirst + i
+
+			err = f.InsertRow(sheetName, rowNumber)
+			row := rows[i]
+
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("A%d", rowNumber), row.ItemNumber, style)
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("B%d", rowNumber), row.ProductNo, style)
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("C%d", rowNumber), row.Description, style)
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("D%d", rowNumber), row.Quantity, style)
+
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("E%d", rowNumber), row.NetWeight, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("F%d", rowNumber), row.Height, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("G%d", rowNumber), row.Width, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("H%d", rowNumber), row.Length, styleFormula)
+
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("I%d", rowNumber), fmt.Sprintf("=Round((F%d*G%d*H%d)/1000000,6)", rowNumber, rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("J%d", rowNumber), fmt.Sprintf("=Round(I%d*35.315,6)", rowNumber), styleFormula)
+
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("K%d", rowNumber), row.Country, style)
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("L%d", rowNumber), row.HsCode, style)
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("M%d", rowNumber), row.WebLink, style)
+
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("N%d", rowNumber), 0.0, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("O%d", rowNumber), 0.0, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("P%d", rowNumber), row.Price, styleFormula)
+
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("Q%d", rowNumber), fmt.Sprintf("=P%d", rowNumber), styleFormula)
+
+			// marketplace
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("R%d", rowNumber), row.EuVatRate, styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("S%d", rowNumber), fmt.Sprintf("=Round(Q%d*(1-1/(1+R%d)), 6)", rowNumber, rowNumber), styleFormula)
+
+			// platform cost
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("T%d", rowNumber), row.ReferralFeeRate, styleFormula)
+
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("U%d", rowNumber), fmt.Sprintf("=T%d", rowNumber), stylePercent)
+
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("V%d", rowNumber), fmt.Sprintf("=Round(T%d*Q%d,6)", rowNumber, rowNumber), styleFormula)
+
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("W%d", rowNumber), row.FulfilmentFee, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("X%d", rowNumber), row.StorageFeeRate, styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("Y%d", rowNumber), fmt.Sprintf("=Round(X%d*I%d,6)", rowNumber, rowNumber), styleFormula)
+
+			// local cost
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("Z%d", rowNumber), row.GroundFeeRate, styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AA%d", rowNumber), fmt.Sprintf("=Round(Z%d*E%d,6)", rowNumber, rowNumber), styleFormula)
+
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AB%d", rowNumber), row.WarehouseFeeRate, styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AC%d", rowNumber), fmt.Sprintf("=Round(AB%d*E%d,6)", rowNumber, rowNumber), styleFormula)
+
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AD%d", rowNumber), row.ClearanceRate, styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AE%d", rowNumber), fmt.Sprintf("=Round(AD%d*E%d,6)", rowNumber, rowNumber), styleFormula)
+
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AF%d", rowNumber), row.DeliveryRate, styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AG%d", rowNumber), fmt.Sprintf("=Round(AF%d*E%d,6)", rowNumber, rowNumber), styleFormula)
+
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AH%d", rowNumber), row.WithinFeeRate, styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AI%d", rowNumber), fmt.Sprintf("=Round(AH%d*E%d,6)", rowNumber, rowNumber), styleFormula)
+
+			// subtotal
+			subtotalFormula := fmt.Sprintf("=Round(AA%d+AC%d+AE%d+AG%d+AI%d,6)", rowNumber, rowNumber, rowNumber, rowNumber, rowNumber)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AJ%d", rowNumber), subtotalFormula, styleFormula)
+
+			// customs value include duty
+			customsValueIncludeDutyFormula := fmt.Sprintf("=Round(Q%d-(S%d+V%d+W%d+Y%d+AJ%d),6)",
+				rowNumber, rowNumber, rowNumber, rowNumber, rowNumber, rowNumber)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AK%d", rowNumber), customsValueIncludeDutyFormula, styleFormula)
+
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AM%d", rowNumber), row.EuDutyRate, styleFormula)
+
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AL%d", rowNumber), fmt.Sprintf("=Round(AK%d/(1+AM%d),6)", rowNumber, rowNumber), styleFormula)
+
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AN%d", rowNumber), fmt.Sprintf("=AM%d", rowNumber), stylePercent)
+
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AO%d", rowNumber), fmt.Sprintf("=Round(AL%d*AM%d,6)", rowNumber, rowNumber), styleFormula)
+
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AP%d", rowNumber), fmt.Sprintf("=Round(AL%d*D%d,6)", rowNumber, rowNumber), styleFormula)
 			if err != nil {
 				return err
 			}
