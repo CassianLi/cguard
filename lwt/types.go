@@ -27,6 +27,7 @@ type ExcelColumnForLwt struct {
 	EuVatRate               float64 `db:"eu_vat_rate"`
 	VatAmount               float64 `db:"vat_amount"`
 	ReferralFeeRate         float64 `db:"referral_fee_rate"`
+	ReferralFee             float64 `db:"referral_fee"`
 	ProcessingFeeRate       float64 `db:"processing_fee_rate"`
 	InterchangeableFeeRate  float64 `db:"interchangeable_fee_rate"`
 	AuthorisationFee        float64 `db:"authorisation_fee"`
@@ -35,6 +36,7 @@ type ExcelColumnForLwt struct {
 	ClosingFee              float64 `db:"closing_fee"`
 	FulfilmentFee           float64 `db:"fulfilment_fee"`
 	StorageFeeRate          float64 `db:"storage_fee_rate"`
+	StorageFee              float64 `db:"storage_fee"`
 	EcpFees                 float64 `db:"ecp_fees"`
 	WithinFeeRate           float64 `db:"within_fee_rate"`
 	OutsideFeeRate          float64 `db:"outside_fee_rate"`
