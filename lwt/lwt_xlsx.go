@@ -373,11 +373,11 @@ func fillLwtExcelForNl(lwtFilePath string, rows []ExcelColumnForLwt) error {
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AS%d", rowNumber), row.EuDutyRate, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AT%d", rowNumber), fmt.Sprintf("=AS%d", rowNumber), stylePercent)
 
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AR%d", rowNumber), fmt.Sprintf("=Round(AQ%d/(1+AS%d),6)", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AR%d", rowNumber), fmt.Sprintf("=Round(AQ%d/(1+AS%d),2)", rowNumber, rowNumber), styleFormula)
 
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AU%d", rowNumber), fmt.Sprintf("=Round(AR%d*AS%d,6)", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AU%d", rowNumber), fmt.Sprintf("=Round(AR%d*AS%d,2)", rowNumber, rowNumber), styleFormula)
 
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AV%d", rowNumber), fmt.Sprintf("=Round(AR%d*D%d,6)", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AV%d", rowNumber), fmt.Sprintf("=Round(AR%d*D%d,2)", rowNumber, rowNumber), styleFormula)
 			if err != nil {
 				return err
 			}
@@ -488,13 +488,13 @@ func fillLwtExcelForBe(lwtFilePath string, rows []ExcelColumnForLwt) error {
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AM%d", rowNumber), row.EuDutyRate, styleFormula)
 
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AL%d", rowNumber), fmt.Sprintf("=Round(AK%d/(1+AM%d),6)", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AL%d", rowNumber), fmt.Sprintf("=Round(AK%d/(1+AM%d),2)", rowNumber, rowNumber), styleFormula)
 
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AN%d", rowNumber), fmt.Sprintf("=AM%d", rowNumber), stylePercent)
 
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AO%d", rowNumber), fmt.Sprintf("=Round(AL%d*AM%d,6)", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AO%d", rowNumber), fmt.Sprintf("=Round(AL%d*AM%d,2)", rowNumber, rowNumber), styleFormula)
 
-			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AP%d", rowNumber), fmt.Sprintf("=Round(AL%d*D%d,6)", rowNumber, rowNumber), styleFormula)
+			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AP%d", rowNumber), fmt.Sprintf("=Round(AL%d*D%d,2)", rowNumber, rowNumber), styleFormula)
 			if err != nil {
 				return err
 			}
