@@ -553,9 +553,10 @@ func fillBriefLwtExcel(lwtFilePath string, rows []ExcelColumnForBriefLwt) error 
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("C%d", rowNumber), platNo, style)
 
 			trackingNo := ""
-			if row.TrackingNo.Valid {
-				trackingNo = row.TrackingNo.String
-			}
+			// change: fill trackingNO is null
+			//if row.TrackingNo.Valid {
+			//	trackingNo = row.TrackingNo.String
+			//}
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("D%d", rowNumber), trackingNo, style)
 
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("E%d", rowNumber), row.ProductNo, style)
