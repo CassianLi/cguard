@@ -113,7 +113,7 @@ func makeBriefLWT(customsId string) (string, error) {
 	var rows []ExcelColumnForBriefLwt
 	err := Db.Select(&rows, QueryBriefLwtData, customsId)
 	if err != nil {
-		return "", err
+		return "", errors.New(fmt.Sprintf("query brief lwt data failed, err:%v", err))
 	}
 
 	if len(rows) == 0 {
@@ -123,13 +123,13 @@ func makeBriefLWT(customsId string) (string, error) {
 	var billPlat BillNoAndPlatForCustoms
 	err = Db.Get(&billPlat, QueryPlatAndBillNo, customsId)
 	if err != nil {
-		return "", err
+		return "", errors.New(fmt.Sprintf("query plat and bill no failed, err:%v", err))
 	}
 
 	var tk TrackingNoForCustoms
 	err = Db.Get(&tk, QueryFirstTrackingNumber, customsId)
 	if err != nil {
-		return "", err
+		return "", errors.New(fmt.Sprintf("query tracking number failed, err:%v", err))
 	}
 	for i := 0; i < len(rows); i++ {
 		row := rows[i]
@@ -138,8 +138,6 @@ func makeBriefLWT(customsId string) (string, error) {
 		row.TrackingNo = tk.TrackingNo
 		rows[i] = row
 	}
-
-	fmt.Println(rows)
 
 	return generateExcelForBriefLWT(rows)
 }
@@ -153,7 +151,7 @@ func generateExcelForOfficialLWT(rows []ExcelColumnForLwt) (string, error) {
 
 	lwtFilePath, err := readyFowLwtFile(declareCountry, customId, salesChannel, false)
 	if err != nil {
-		return "", err
+		return "", errors.New(fmt.Sprintf("Prepare LWT file failed, err:%v", err))
 	}
 
 	if "BE" == strings.ToUpper(declareCountry) {
@@ -163,7 +161,7 @@ func generateExcelForOfficialLWT(rows []ExcelColumnForLwt) (string, error) {
 	}
 
 	if err != nil {
-		return "", err
+		return "", errors.New(fmt.Sprintf("Fill LWT excel failed, err:%v", err))
 	}
 
 	return filepath.Base(lwtFilePath), nil
@@ -258,7 +256,7 @@ var font = &excelize.Font{
 func fillLwtExcelForNl(lwtFilePath string, rows []ExcelColumnForLwt) error {
 	f, err := excelize.OpenFile(lwtFilePath)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("fill lwt excel file for nl,open file failed", err)
 	}
 
 	defer func() {
@@ -395,7 +393,7 @@ func fillLwtExcelForNl(lwtFilePath string, rows []ExcelColumnForLwt) error {
 func fillLwtExcelForBe(lwtFilePath string, rows []ExcelColumnForLwt) error {
 	f, err := excelize.OpenFile(lwtFilePath)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("fill lwt excel file for be,open file failed", err)
 	}
 
 	defer func() {
