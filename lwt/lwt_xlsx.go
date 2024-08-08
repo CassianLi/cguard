@@ -533,7 +533,9 @@ func fillBriefLwtExcel(lwtFilePath string, rows []ExcelColumnForBriefLwt) error 
 		log.Errorf("Create excel syle failed: %v", err)
 		return err
 	} else {
+		fmt.Println("Begin to fill excel ...")
 		for i := 0; i < len(rows); i++ {
+			fmt.Println("Begin to fill excel, at:", i)
 			rowNumber := InsertRowFirst + i
 
 			err = f.InsertRow(sheetName, rowNumber)
