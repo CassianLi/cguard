@@ -35,7 +35,6 @@ func GenerateLWTExcel(data string) {
 	if err != nil {
 		response.Error = fmt.Sprintf("Deserialization of MQ message failed, err:%v", err)
 	} else {
-
 		var lwtFilename string
 		if requestForLwt.Brief {
 			lwtFilename, err = makeBriefLWT(requestForLwt.CustomsId)
@@ -44,6 +43,7 @@ func GenerateLWTExcel(data string) {
 		}
 
 		if err != nil {
+			fmt.Println("Generate LWT excel failed", err)
 			response.Error = fmt.Sprintf("Generate LWT excel failed,err:%v", err)
 		} else {
 			response.CustomsId = requestForLwt.CustomsId
@@ -529,7 +529,9 @@ func fillBriefLwtExcel(lwtFilePath string, rows []ExcelColumnForBriefLwt) error 
 	style, err := f.NewStyle(&excelize.Style{Border: border, Alignment: alignment})
 
 	if err != nil {
+		fmt.Println("Create excel syle failed", err)
 		log.Errorf("Create excel syle failed: %v", err)
+		return err
 	} else {
 		for i := 0; i < len(rows); i++ {
 			rowNumber := InsertRowFirst + i
