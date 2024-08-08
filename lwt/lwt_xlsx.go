@@ -126,16 +126,16 @@ func makeBriefLWT(customsId string) (string, error) {
 		return "", errors.New(fmt.Sprintf("query plat and bill no failed, err:%v", err))
 	}
 
-	var tk TrackingNoForCustoms
-	err = Db.Get(&tk, QueryFirstTrackingNumber, customsId)
-	if err != nil {
-		return "", errors.New(fmt.Sprintf("query tracking number failed, err:%v", err))
-	}
+	//var tk TrackingNoForCustoms
+	//err = Db.Get(&tk, QueryFirstTrackingNumber, customsId)
+	//if err != nil {
+	//	return "", errors.New(fmt.Sprintf("query tracking number failed, err:%v", err))
+	//}
 	for i := 0; i < len(rows); i++ {
 		row := rows[i]
 		row.BillNo = billPlat.BillNo
 		row.PlatoNo = billPlat.PlatoNo
-		row.TrackingNo = tk.TrackingNo
+		//row.TrackingNo = tk.TrackingNo
 		rows[i] = row
 	}
 
