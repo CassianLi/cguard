@@ -16,11 +16,17 @@ import (
 )
 
 const (
-	SheetIndex         = 0
 	InsertRowFirst     = 4
 	FloatDecimalPlaces = 6
 	TimeLayout         = "20060102150405"
 )
+
+// LwtExcelSheetMap  SaleChannel 对应的sheet index
+var LwtExcelSheetMap = map[string]int{
+	"amazon":    0,
+	"ebay":      1,
+	"cdiscount": 2,
+}
 
 // GenerateLWTExcel generate excel file for LWT
 func GenerateLWTExcel(data string) {
@@ -59,7 +65,7 @@ func GenerateLWTExcel(data string) {
 
 // deserializeRequest is used to deserialize rabbitmq request
 func deserializeRequest(message string) (RequestForLwt, error) {
-	fmt.Printf("RequestForLwt: %v\n", message)
+	log.Infof("Deserialize request: %v", message)
 
 	msg, err := strconv.Unquote(message)
 	fmt.Println("msg:", msg)
@@ -93,8 +99,20 @@ func publishLwtResult(res *ResponseForLwt) {
 	}
 }
 
-// makeOfficialLWT Make official LWT Excel file
-func makeOfficialLWT(customsId string) (string, error) {
+// isSplitCustoms 是否是拆单报关？@param customsId 主报关单号
+func isSplitCustoms(customsId string) bool {
+	var count int
+	err := Db.Get(&count, QueryCustomsSplitTotal, customsId)
+	if err != nil {
+		fmt.Printf("query customs split total failed, err:%v", err)
+		return false
+	}
+	fmt.Println("split count:", count)
+	return count > 0
+}
+
+// makeOfficialLWTForNormal 普通的报关单生成LWT（未拆单报关）
+func makeOfficialLWTForNormal(customsId string) (string, error) {
 	var rows []ExcelColumnForLwt
 	err := Db.Select(&rows, QueryLwtData, customsId)
 	if err != nil {
@@ -108,8 +126,74 @@ func makeOfficialLWT(customsId string) (string, error) {
 	return generateExcelForOfficialLWT(rows)
 }
 
-// makeBriefLWT
-func makeBriefLWT(customsId string) (string, error) {
+// makeOfficialLWTForSplit 拆单报关单生成LWT
+func makeOfficialLWTForSplit(customsId string) (string, error) {
+	// 1. 查询子报关单号
+	fmt.Println("1. query customs split child, customsId:", customsId)
+	var customsIds []string
+	err := Db.Select(&customsIds, QueryCustomsSplitChild, customsId)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("query customs split child customsIds failed, err:%v", err))
+	}
+	// 2. 查询主单号的数据
+	fmt.Println("2. query customs base info, customsId:", customsId)
+	var customsBaseInfo CustomsBaseInfo
+	err = Db.Get(&customsBaseInfo, QueryCustomsBaseInfo, customsId)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("query customs base info failed, err:%v", err))
+	}
+
+	// 3. 准备LWT文件模版及存放路径
+	fmt.Println("3. ready for lwt file(template & save path), customsId:", customsId)
+	fileSavePath, err := readyFowLwtFile(customsBaseInfo.DeclareCountry, customsId, "split", false)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("ready file for lwt failed, err:%v", err))
+	}
+
+	// 4. 查询子单号的LWT 数据，并填充到LWT文件中
+	// 有一个子单号的数据为空，就返回错误。不再继续执行
+	fmt.Println("4. loop fill lwt excel for split, customsIds:", customsIds)
+	for _, id := range customsIds {
+		var rows []ExcelColumnForLwt
+		err = Db.Select(&rows, QueryLwtDataForSplit, id)
+		if err != nil {
+			return "", err
+		}
+
+		salesChannel := strings.ToLower(rows[0].SalesChannel)
+		idx, ok := LwtExcelSheetMap[salesChannel]
+		if !ok {
+			return "", errors.New(fmt.Sprintf("The map LwtExcelSheetMap dont have the sales channel %s.", salesChannel))
+		}
+
+		if customsBaseInfo.DeclareCountry == "BE" {
+			err = fillLwtExcelForBe(fileSavePath, rows, idx)
+		} else {
+			err = fillLwtExcelForNl(fileSavePath, rows, idx)
+		}
+		if err != nil {
+			return "", errors.New(fmt.Sprintf("fill lwt excel failed, err:%v", err))
+		}
+	}
+	// 5. 返回文件名
+	fmt.Println("5. return lwt file name: ", fileSavePath)
+	return filepath.Base(fileSavePath), nil
+}
+
+// makeOfficialLWT Make official LWT Excel file
+func makeOfficialLWT(customsId string) (string, error) {
+	// Is split into multiple sales channels?
+	if isSplitCustoms(customsId) {
+		fmt.Println("customsId is split, customsId:", customsId)
+		return makeOfficialLWTForSplit(customsId)
+	} else {
+		fmt.Println("customsId is normal, customsId:", customsId)
+		return makeOfficialLWTForNormal(customsId)
+	}
+}
+
+// makeBriefLwtNormal 普通的简易报关文件LWT
+func makeBriefLwtNormal(customsId string) (string, error) {
 	var rows []ExcelColumnForBriefLwt
 	err := Db.Select(&rows, QueryBriefLwtData, customsId)
 	if err != nil {
@@ -126,20 +210,90 @@ func makeBriefLWT(customsId string) (string, error) {
 		return "", errors.New(fmt.Sprintf("query plat and bill no failed, err:%v", err))
 	}
 
-	//var tk TrackingNoForCustoms
-	//err = Db.Get(&tk, QueryFirstTrackingNumber, customsId)
-	//if err != nil {
-	//	return "", errors.New(fmt.Sprintf("query tracking number failed, err:%v", err))
-	//}
 	for i := 0; i < len(rows); i++ {
 		row := rows[i]
 		row.BillNo = billPlat.BillNo
 		row.PlatoNo = billPlat.PlatoNo
-		//row.TrackingNo = tk.TrackingNo
 		rows[i] = row
 	}
 
 	return generateExcelForBriefLWT(rows)
+}
+
+// makeBriefLwtForSplit 拆单报关文件简易LWT
+func makeBriefLwtForSplit(customsId string) (string, error) {
+	// 1. 查询子报关单号
+	fmt.Println("1. query customs split child, customsId:", customsId)
+	var customsIds []string
+	err := Db.Select(&customsIds, QueryCustomsSplitChild, customsId)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("query customs split child customsIds failed, err:%v", err))
+	}
+	// 2. 查询主单号的数据
+	fmt.Println("2. query customs base info, customsId:", customsId)
+	var customsBaseInfo CustomsBaseInfo
+	err = Db.Get(&customsBaseInfo, QueryCustomsBaseInfo, customsId)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("query customs base info failed, err:%v", err))
+	}
+	// 3. 查询主单号的plat和bill no
+	fmt.Println("3. query plat and bill no, customsId:", customsId)
+	var billPlat BillNoAndPlatForCustoms
+	err = Db.Get(&billPlat, QueryPlatAndBillNo, customsId)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("query plat and bill no failed, err:%v", err))
+	}
+
+	// 4. 准备LWT文件模版及存放路径
+	fmt.Println("4. ready for lwt file(template & save path), customsId:", customsId)
+	fileSavePath, err := readyFowLwtFile(customsBaseInfo.DeclareCountry, customsId, "split", true)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("ready file for lwt failed, err:%v", err))
+	}
+
+	// 4. 查询子单号的LWT 数据，并填充到LWT文件中
+	// 有一个子单号的数据为空，就返回错误。不再继续执行
+	fmt.Println("5. loop fill brief lwt excel for split, customsIds:", customsIds)
+	for _, id := range customsIds {
+		var rows []ExcelColumnForBriefLwt
+		err = Db.Select(&rows, QueryBriefLwtDataForSplit, id)
+		if err != nil || len(rows) == 0 {
+			return "", errors.New(fmt.Sprintf("query brief lwt data for split failed, err:%v", err))
+		}
+
+		salesChannel := strings.ToLower(rows[0].SalesChannel)
+		idx, ok := LwtExcelSheetMap[salesChannel]
+		if !ok {
+			return "", errors.New(fmt.Sprintf("The map LwtExcelSheetMap dont have the sales channel %s.", salesChannel))
+		}
+		// 填充plat和bill no
+		fmt.Println("5. fill plat and bill no, child customsId:", id)
+		for i := 0; i < len(rows); i++ {
+			row := rows[i]
+			row.BillNo = billPlat.BillNo
+			row.PlatoNo = billPlat.PlatoNo
+			rows[i] = row
+		}
+
+		err = fillBriefLwtExcel(fileSavePath, rows, idx)
+
+		if err != nil {
+			return "", errors.New(fmt.Sprintf("fill brief lwt excel failed, err:%v", err))
+		}
+	}
+	// 5. 返回文件名
+	fmt.Println("5. return brief lwt file name: ", fileSavePath)
+	return filepath.Base(fileSavePath), nil
+}
+
+// makeBriefLWT
+func makeBriefLWT(customsId string) (string, error) {
+	// Is split into multiple sales channels?
+	if isSplitCustoms(customsId) {
+		return makeBriefLwtForSplit(customsId)
+	} else {
+		return makeBriefLwtNormal(customsId)
+	}
 }
 
 // GenerateLWTExcel generate excel file for LWT,
@@ -155,9 +309,9 @@ func generateExcelForOfficialLWT(rows []ExcelColumnForLwt) (string, error) {
 	}
 
 	if "BE" == strings.ToUpper(declareCountry) {
-		err = fillLwtExcelForBe(lwtFilePath, rows)
+		err = fillLwtExcelForBe(lwtFilePath, rows, 0)
 	} else {
-		err = fillLwtExcelForNl(lwtFilePath, rows)
+		err = fillLwtExcelForNl(lwtFilePath, rows, 0)
 	}
 
 	if err != nil {
@@ -179,7 +333,7 @@ func generateExcelForBriefLWT(rows []ExcelColumnForBriefLwt) (string, error) {
 		return "", err
 	}
 
-	err = fillBriefLwtExcel(lwtFilePath, rows)
+	err = fillBriefLwtExcel(lwtFilePath, rows, 0)
 	if err != nil {
 		return "", err
 	}
@@ -187,18 +341,14 @@ func generateExcelForBriefLWT(rows []ExcelColumnForBriefLwt) (string, error) {
 	return filepath.Base(lwtFilePath), nil
 }
 
-// readyFowLwtFile Prepare Lwt file
+// readyFowLwtFile 准备LWT文件模版和存放路径。如果是拆分报关，salesChannel为split
 func readyFowLwtFile(declareCountry, customId, salesChannel string, brief bool) (string, error) {
-	var templateType, templatePath string
+	var templatePath string
 	if brief {
-		templateType = "brief"
-		templatePath = viper.GetString(fmt.Sprintf("lwt.template.%s.%s", templateType, strings.ToLower(salesChannel)))
+		templatePath = viper.GetString(fmt.Sprintf("lwt.template.brief.%s", strings.ToLower(salesChannel)))
 	} else {
-		templateType = "official"
-		templatePath = viper.GetString(fmt.Sprintf("lwt.template.%s.%s.%s", templateType, strings.ToLower(declareCountry), strings.ToLower(salesChannel)))
+		templatePath = viper.GetString(fmt.Sprintf("lwt.template.official.%s.%s", strings.ToLower(declareCountry), strings.ToLower(salesChannel)))
 	}
-
-	fmt.Println("templatePath", templatePath)
 
 	if templatePath == "" {
 		return "", errors.New(fmt.Sprintf("SalesChannel: %s not supports to LWT.", salesChannel))
@@ -225,6 +375,7 @@ func readyFowLwtFile(declareCountry, customId, salesChannel string, brief bool) 
 	} else {
 		lwtFilePath = filepath.Join(saveDir, fmt.Sprintf("LWT_%s_%s.xlsx", customId, timestamp))
 	}
+
 	fmt.Println("lwtFilePath: ", lwtFilePath)
 
 	err := utils.Copy(templatePath, lwtFilePath)
@@ -253,7 +404,7 @@ var font = &excelize.Font{
 }
 
 // fillLwtExcelForNl fill data to lwt excel file for NL
-func fillLwtExcelForNl(lwtFilePath string, rows []ExcelColumnForLwt) error {
+func fillLwtExcelForNl(lwtFilePath string, rows []ExcelColumnForLwt, sheetIdx int) error {
 	f, err := excelize.OpenFile(lwtFilePath)
 	if err != nil {
 		fmt.Println("fill lwt excel file for nl,open file failed", err)
@@ -265,9 +416,9 @@ func fillLwtExcelForNl(lwtFilePath string, rows []ExcelColumnForLwt) error {
 		}
 	}()
 
-	f.SetActiveSheet(SheetIndex)
+	f.SetActiveSheet(sheetIdx)
 
-	sheetName := f.GetSheetName(SheetIndex)
+	sheetName := f.GetSheetName(sheetIdx)
 
 	fmt.Printf("sheetName: %s\n", sheetName)
 
@@ -390,7 +541,7 @@ func fillLwtExcelForNl(lwtFilePath string, rows []ExcelColumnForLwt) error {
 }
 
 // fillLwtExcelForBe fill data to lwt excel file for BE
-func fillLwtExcelForBe(lwtFilePath string, rows []ExcelColumnForLwt) error {
+func fillLwtExcelForBe(lwtFilePath string, rows []ExcelColumnForLwt, sheetIdx int) error {
 	f, err := excelize.OpenFile(lwtFilePath)
 	if err != nil {
 		fmt.Println("fill lwt excel file for be,open file failed", err)
@@ -401,10 +552,9 @@ func fillLwtExcelForBe(lwtFilePath string, rows []ExcelColumnForLwt) error {
 		if err := f.Close(); err != nil {
 		}
 	}()
+	f.SetActiveSheet(sheetIdx)
 
-	f.SetActiveSheet(SheetIndex)
-
-	sheetName := f.GetSheetName(SheetIndex)
+	sheetName := f.GetSheetName(sheetIdx)
 
 	fmt.Printf("sheetName: %s\n", sheetName)
 
@@ -507,7 +657,7 @@ func fillLwtExcelForBe(lwtFilePath string, rows []ExcelColumnForLwt) error {
 }
 
 // fillBriefLwtExcel
-func fillBriefLwtExcel(lwtFilePath string, rows []ExcelColumnForBriefLwt) error {
+func fillBriefLwtExcel(lwtFilePath string, rows []ExcelColumnForBriefLwt, sheetIdx int) error {
 	f, err := excelize.OpenFile(lwtFilePath)
 	if err != nil {
 		fmt.Println(err)
@@ -519,9 +669,9 @@ func fillBriefLwtExcel(lwtFilePath string, rows []ExcelColumnForBriefLwt) error 
 		}
 	}()
 
-	f.SetActiveSheet(SheetIndex)
+	f.SetActiveSheet(sheetIdx)
 
-	sheetName := f.GetSheetName(SheetIndex)
+	sheetName := f.GetSheetName(sheetIdx)
 
 	fmt.Printf("sheetName: %s\n", sheetName)
 

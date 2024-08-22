@@ -53,6 +53,21 @@ type ExcelColumnForLwt struct {
 	FinalDeclaredValue      float64 `db:"final_declared_value"`
 }
 
+// CustomsBaseInfo customs base info, include customs id, declare country, sales channel
+type CustomsBaseInfo struct {
+	CustomsId      string `db:"customs_id"`
+	DeclareCountry string `db:"declare_country"`
+	SalesChannel   string `db:"sales_channel"`
+}
+
+// ExcelColumnForLwtSplit ExcelColumnForLwt The customs has been split into multiple sales channels customs value Excel data for LWT
+type ExcelColumnForLwtSplit struct {
+	ExcelColumnForLwt
+	// 拆单报关，通过子单号插叙父单号和父单号的item_number
+	ParentCustomsId  string `db:"parent_customs_id"`
+	ParentItemNumber string `db:"parent_item_number"`
+}
+
 type EcpFeeRate struct {
 	DeclareCountry         sql.NullString `db:"declare_country"`
 	SalesChannel           sql.NullString `db:"sales_channel"`

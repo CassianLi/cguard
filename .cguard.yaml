@@ -35,14 +35,17 @@ lwt:
   template:
     official:
       nl:
+        split: template/split_nl.xlsx
         amazon: template/amazon_nl.xlsx
         ebay: template/ebay.xlsx
         c_discount: template/cdiscount.xlsx
       be:
+        split: template/split_be.xlsx
         amazon: template/amazon_be.xlsx
         ebay: template/ebay.xlsx
         c_discount: template/cdiscount.xlsx
     brief:
+      split: template/brief_split.xlsx
       amazon: template/brief_amazon.xlsx
       ebay: template/brief_ebay.xlsx
       c_discount: template/brief_cdiscount.xlsx
