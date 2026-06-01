@@ -599,22 +599,22 @@ func fillLwtExcelForNlIncProfit(lwtFilePath string, rows []model.ExcelColumnForL
 
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("V%d", rowNumber), fmt.Sprintf("=Round(T%d*Q%d,6)", rowNumber, rowNumber), styleFormula)
 			// 原计算模版 多出的费用
-			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("W%d", rowNumber), row.ClosingFee, styleFormula)
-			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("X%d", rowNumber), row.HighVolumeListingFee, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("W%d", rowNumber), row.ClosingFee.Float64, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("X%d", rowNumber), row.HighVolumeListingFee.Float64, styleFormula)
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("Y%d", rowNumber), row.ProcessingFeeRate, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("Z%d", rowNumber), fmt.Sprintf("=Round(Y%d*Q%d,6)", rowNumber, rowNumber), styleFormula)
 
-			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AA%d", rowNumber), row.AuthorisationFee, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AA%d", rowNumber), row.AuthorisationFee.Float64, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AB%d", rowNumber), fmt.Sprintf("=AA%d", rowNumber), styleFormula)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AC%d", rowNumber), row.InterchangeableFeeRate, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AD%d", rowNumber), fmt.Sprintf("=Round(AC%d*Q%d,6)", rowNumber, rowNumber), styleFormula)
 
-			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AE%d", rowNumber), row.FulfilmentFee, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AE%d", rowNumber), row.FulfilmentFee.Float64, styleFormula)
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AF%d", rowNumber), row.StorageFeeRate, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AG%d", rowNumber), fmt.Sprintf("=Round(AF%d*I%d,6)", rowNumber, rowNumber), styleFormula)
 
-			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AH%d", rowNumber), row.AdvertisingFee, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AH%d", rowNumber), row.AdvertisingFee.Float64, styleFormula)
 
 			// profit
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AI%d", rowNumber), row.ProfitRate, styleFormula)
@@ -740,13 +740,13 @@ func fillLwtExcelForNl(lwtFilePath string, rows []model.ExcelColumnForLwt, sheet
 
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("X%d", rowNumber), fmt.Sprintf("=Round(W%d*Q%d,6)", rowNumber, rowNumber), styleFormula)
 
-			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("Y%d", rowNumber), row.AuthorisationFee, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("Y%d", rowNumber), row.AuthorisationFee.Float64, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("Z%d", rowNumber), fmt.Sprintf("=Y%d", rowNumber), styleFormula)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AA%d", rowNumber), row.InterchangeableFeeRate, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AB%d", rowNumber), fmt.Sprintf("=Round(AA%d*Q%d,6)", rowNumber, rowNumber), styleFormula)
 
-			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AC%d", rowNumber), row.FulfilmentFee, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AC%d", rowNumber), row.FulfilmentFee.Float64, styleFormula)
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AD%d", rowNumber), row.StorageFeeRate, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AE%d", rowNumber), fmt.Sprintf("=Round(AD%d*I%d,6)", rowNumber, rowNumber), styleFormula)
 
@@ -872,22 +872,22 @@ func fillLwtExcelForBeIncProfit(lwtFilePath string, rows []model.ExcelColumnForL
 
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("V%d", rowNumber), fmt.Sprintf("=Round(T%d*Q%d,6)", rowNumber, rowNumber), styleFormula)
 			// 原计算模版 多出的费用
-			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("W%d", rowNumber), row.ClosingFee, styleFormula)
-			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("X%d", rowNumber), row.HighVolumeListingFee, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("W%d", rowNumber), row.ClosingFee.Float64, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("X%d", rowNumber), row.HighVolumeListingFee.Float64, styleFormula)
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("Y%d", rowNumber), row.ProcessingFeeRate, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("Z%d", rowNumber), fmt.Sprintf("=Round(Y%d*Q%d,6)", rowNumber, rowNumber), styleFormula)
 
-			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AA%d", rowNumber), row.AuthorisationFee, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AA%d", rowNumber), row.AuthorisationFee.Float64, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AB%d", rowNumber), fmt.Sprintf("=AA%d", rowNumber), styleFormula)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AC%d", rowNumber), row.InterchangeableFeeRate, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AD%d", rowNumber), fmt.Sprintf("=Round(AC%d*Q%d,6)", rowNumber, rowNumber), styleFormula)
 
-			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AE%d", rowNumber), row.FulfilmentFee, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AE%d", rowNumber), row.FulfilmentFee.Float64, styleFormula)
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AF%d", rowNumber), row.StorageFeeRate, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("AG%d", rowNumber), fmt.Sprintf("=Round(AF%d*I%d,6)", rowNumber, rowNumber), styleFormula)
 
-			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AH%d", rowNumber), row.AdvertisingFee, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AH%d", rowNumber), row.AdvertisingFee.Float64, styleFormula)
 
 			// profit
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("AI%d", rowNumber), row.ProfitRate, styleFormula)
@@ -1006,7 +1006,7 @@ func fillLwtExcelForBe(lwtFilePath string, rows []model.ExcelColumnForLwt, sheet
 
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("V%d", rowNumber), fmt.Sprintf("=Round(T%d*Q%d,6)", rowNumber, rowNumber), styleFormula)
 
-			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("W%d", rowNumber), row.FulfilmentFee, styleFormula)
+			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("W%d", rowNumber), row.FulfilmentFee.Float64, styleFormula)
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("X%d", rowNumber), row.StorageFeeRate, styleFormula)
 			err = addFormulaCellForSheet(f, sheetName, fmt.Sprintf("Y%d", rowNumber), fmt.Sprintf("=Round(X%d*I%d,6)", rowNumber, rowNumber), styleFormula)
 

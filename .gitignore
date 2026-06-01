@@ -13,7 +13,9 @@
 
 
 dist/
-/cguard
 
 # Project exclude paths
-/out/
+out/
+
+# tmp
+tmp/
