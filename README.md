@@ -2,9 +2,15 @@
 
 > 当前应用为一个`web` 服务器，通过监听`Rabbit MQ` 队列来获取需要生成`LWT` 海关查验信息文件，并通过将生成的`lwt`文件名发回到指定消息队列的形式通知生成结果。可通过`lwt`文件名，访问当前服务器提供的`API`接口下载对应的文件。
 
+## 构建与发布
 
+交叉编译 Linux / Windows amd64 并打包（含 `cguard` 可执行文件、`config.yaml`、`README.md`）：
 
+```shell
+make package    # 或 make help 查看全部目标
+```
 
+详细说明见 [docs/BUILD.md](docs/BUILD.md)。
 
 ## 命令说明
 
