@@ -134,9 +134,17 @@ func isSplitCustoms(customsId string) bool {
 func makeOfficialLWTForNormal(customsId string, incProfit bool) (string, error) {
 	fmt.Println("1. query lwt data, customsId:", customsId)
 	var rows []model.ExcelColumnForLwt
-	err := database.GetDB().Select(&rows, script.QueryLwtData, customsId)
-	if err != nil {
-		return "", err
+	// 1. 2026-06-18 日后LWT计算由broker 统一管理报关单Article 使用其完整参数进行计算，品类计算过程和报关单计算过程均保存在service_customs_value_process表中
+	// 先查询 service_declare_value_process表中是否存在，存在则先使用它（旧数据依然存在），不存在则使用service_customs_value_process表中的数据
+	err := database.GetDB().Select(&rows, script.QueryLwtDataOld, customsId)
+	if err != nil || len(rows) == 0 {
+		fmt.Println("query lwt data for old failed, will use service_customs_value_process table data, err:", err)
+		err = database.GetDB().Select(&rows, script.QueryLwtData, customsId)
+		if err != nil || len(rows) == 0 {
+			return "", err
+		}
+	}else{
+		fmt.Println("current customsId:", customsId, "is using service_declare_value_process table data for LWT")
 	}
 
 	if len(rows) == 0 {
@@ -175,9 +183,19 @@ func makeOfficialLWTForSplit(customsId string, incProfit bool) (string, error) {
 	fmt.Println("4. loop fill lwt excel for split, customsIds:", customsIds)
 	for _, id := range customsIds {
 		var rows []model.ExcelColumnForLwt
-		err = database.GetDB().Select(&rows, script.QueryLwtDataForSplit, id)
+
+		// 1. 2026-06-18 日后LWT计算由broker 统一管理报关单Article 使用其完整参数进行计算，品类计算过程和报关单计算过程均保存在service_customs_value_process表中
+		// 先查询 service_declare_value_process表中是否存在，存在则先使用它（旧数据依然存在），不存在则使用service_customs_value_proces表中的数据
+		err = database.GetDB().Select(&rows, script.QueryLwtDataForSplitOld, id)
 		if err != nil || len(rows) == 0 {
-			return "", err
+			fmt.Println("query lwt data for split old failed, will use service_customs_value_process table data, err:", err)
+
+			err = database.GetDB().Select(&rows, script.QueryLwtDataForSplit, id)
+			if err != nil || len(rows) == 0 {
+				return "", err
+			}
+		}else{
+			fmt.Println("current customsId:", customsId, "is using service_declare_value_process table data for LWT")
 		}
 
 		salesChannel := strings.ToLower(rows[0].SalesChannel)

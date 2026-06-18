@@ -2,6 +2,7 @@ package script
 
 // SQL for LWT
 const (
+       // QueryLwtData 2026-06-18  后lwt 只使用 service_customs_value_process表中的数据
 	QueryLwtData string = `SELECT sca.customs_id,
        sca.item_number,
        sca.product_no,
@@ -34,7 +35,62 @@ const (
        scvp.closing_fee,
        scvp.fulfilment_fee,
        scvp.storage_fee_rate,
-	   scvp.storage_fee,
+	scvp.storage_fee,
+       scvp.ecp_fees,
+       if(sca.freight_within_eu_unit>0,sca.freight_within_eu_unit,scvp.within_fee_rate) AS within_fee_rate,
+       scvp.outside_fee_rate,
+       scvp.delivery_rate,
+       scvp.clearance_rate,
+       scvp.ground_fee_rate,
+       scvp.warehouse_fee_rate,
+       scvp.subtotal,
+       scvp.profit_rate,
+       scvp.profit,
+       scvp.eu_duty_rate,
+       scvp.customs_value_include_duty,
+       scvp.customs_value,
+       scvp.final_declared_value
+FROM service_customs_article sca
+         LEFT JOIN service_customs_value_process scvp ON sca.customs_value_process_id = scvp.id
+         LEFT JOIN base_description bd ON scvp.description_id = bd.id
+WHERE sca.customs_id =? and sca.is_removed = 0
+ORDER BY sca.item_number;`
+
+       // QueryLwtDataForOld 2026-06-18 日后LWT计算由broker 统一管理报关单Article 使用其完整参数进行计算，品类计算过程和报关单计算过程均保存在service_customs_value_process表中
+       // 考虑到兼容性：应先查询 service_declare_value_process表中是否存在，存在则先使用它（旧数据依然存在），不存在则使用service_customs_value_process表中的数据
+       QueryLwtDataOld string = `SELECT sca.customs_id,
+       sca.item_number,
+       sca.product_no,
+       sca.country,
+       IFNULL(scvp.hs_code, sca.hs_code) AS hs_code,
+       sca.quantity,
+       sca.number_of_package,
+       sca.shipping_marks,
+       bd.description,
+       bd.web_link,
+       scvp.sales_channel,
+       scvp.declare_country,
+       scvp.transport_type,
+       scvp.net_weight,
+       scvp.length,
+       scvp.width,
+       scvp.height,
+       scvp.volume,
+       scvp.price,
+       scvp.price_screenshot,
+       scvp.eu_vat_rate,
+       scvp.vat_amount,
+       scvp.referral_fee_rate,
+       scvp.referral_fee,
+       scvp.processing_fee_rate,
+       scvp.interchangeable_fee_rate,
+       scvp.authorisation_fee,
+       scvp.high_volume_listing_fee,
+       scvp.advertising_fee,
+       scvp.closing_fee,
+       scvp.fulfilment_fee,
+       scvp.storage_fee_rate,
+	scvp.storage_fee,
        scvp.ecp_fees,
        if(sca.freight_within_eu_unit>0,sca.freight_within_eu_unit,scvp.within_fee_rate) AS within_fee_rate,
        scvp.outside_fee_rate,
@@ -111,7 +167,64 @@ FROM service_customs_supply
 WHERE customs_id = ?;`
 
 	// QueryLwtDataForSplit  使用拆单子单号查询，将父单号和父单号的item_number查询出来
+       // 2026-06-18  后lwt 只使用 service_customs_value_process表中的数据
 	QueryLwtDataForSplit string = `SELECT scsa.customs_id,
+       scsa.item                                                                            AS item_number,
+       sca.product_no,
+       sca.country,
+       IFNULL(scvp.hs_code, sca.hs_code)                                                    AS hs_code,
+       sca.quantity,
+       sca.number_of_package,
+       sca.shipping_marks,
+       bd.description,
+       bd.web_link,
+       scvp.sales_channel,
+       scvp.declare_country,
+       scvp.transport_type,
+       scvp.net_weight,
+       scvp.length,
+       scvp.width,
+       scvp.height,
+       scvp.volume,
+       scvp.price,
+       scvp.price_screenshot,
+       scvp.eu_vat_rate,
+       scvp.vat_amount,
+       scvp.referral_fee_rate,
+       scvp.referral_fee,
+       scvp.processing_fee_rate,
+       scvp.interchangeable_fee_rate,
+       scvp.authorisation_fee,
+       scvp.high_volume_listing_fee,
+       scvp.advertising_fee,
+       scvp.closing_fee,
+       scvp.fulfilment_fee,
+       scvp.storage_fee_rate,
+       scvp.storage_fee,
+       scvp.ecp_fees,
+       IF(sca.freight_within_eu_unit > 0, sca.freight_within_eu_unit, scvp.within_fee_rate) AS within_fee_rate,
+       scvp.outside_fee_rate,
+       scvp.delivery_rate,
+       scvp.clearance_rate,
+       scvp.ground_fee_rate,
+       scvp.warehouse_fee_rate,
+       scvp.subtotal,
+       scvp.profit_rate,
+       scvp.profit,
+       scvp.eu_duty_rate,
+       scvp.customs_value_include_duty,
+       scvp.customs_value,
+       scvp.final_declared_value
+FROM service_customs_article sca
+         INNER JOIN service_customs_supply_article scsa ON sca.id = scsa.article_id
+         LEFT JOIN service_customs_value_process scvp ON sca.customs_value_process_id = scvp.id
+         LEFT JOIN base_description bd ON scvp.description_id = bd.id
+WHERE sca.customs_id = ? and sca.is_removed = 0
+ORDER BY scsa.item;`
+
+       // QueryLwtDataForSplitOld 2026-06-18 日后LWT计算由broker 统一管理报关单Article 使用其完整参数进行计算，品类计算过程和报关单计算过程均保存在service_customs_value_process表中
+       // 考虑到兼容性：应先查询 service_declare_value_process表中是否存在，存在则先使用它（旧数据依然存在），不存在则使用service_customs_value_process表中的数据
+	QueryLwtDataForSplitOld string = `SELECT scsa.customs_id,
        scsa.item                                                                            AS item_number,
        sca.product_no,
        sca.country,
