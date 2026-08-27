@@ -12,7 +12,7 @@ type ExcelColumnForLwt struct {
 	Quantity                string          `db:"quantity"`
 	NumberOfPackage         string          `db:"number_of_package"`
 	ShippingMarks           string          `db:"shipping_marks"`
-	Description             string          `db:"description"`
+	Description             sql.NullString  `db:"description"`
 	WebLink                 string          `db:"web_link"`
 	SalesChannel            string          `db:"sales_channel"`
 	DeclareCountry          string          `db:"declare_country"`
@@ -23,7 +23,7 @@ type ExcelColumnForLwt struct {
 	Height                  float64         `db:"height"`
 	Volume                  float64         `db:"volume"`
 	Price                   float64         `db:"price"`
-	PriceScreenshot         string          `db:"price_screenshot"`
+	PriceScreenshot         sql.NullString  `db:"price_screenshot"`
 	EuVatRate               float64         `db:"eu_vat_rate"`
 	VatAmount               float64         `db:"vat_amount"`
 	ReferralFeeRate         float64         `db:"referral_fee_rate"`
@@ -46,7 +46,7 @@ type ExcelColumnForLwt struct {
 	WarehouseFeeRate        float64         `db:"warehouse_fee_rate"`
 	Subtotal                float64         `db:"subtotal"`
 	ProfitRate              float64         `db:"profit_rate"`
-	Profit                  sql.NullFloat64          `db:"profit"`
+	Profit                  sql.NullFloat64 `db:"profit"`
 	EuDutyRate              float64         `db:"eu_duty_rate"`
 	CustomsValueIncludeDuty float64         `db:"customs_value_include_duty"`
 	CustomsValue            float64         `db:"customs_value"`

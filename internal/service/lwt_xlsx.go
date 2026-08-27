@@ -585,7 +585,7 @@ func fillLwtExcelForNlIncProfit(lwtFilePath string, rows []model.ExcelColumnForL
 
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("A%d", rowNumber), row.ItemNumber, style)
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("B%d", rowNumber), row.ProductNo, style)
-			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("C%d", rowNumber), row.Description, style)
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("C%d", rowNumber), row.Description.String, style)
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("D%d", rowNumber), row.Quantity, style)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("E%d", rowNumber), row.NetWeight, styleFormula)
@@ -720,7 +720,7 @@ func fillLwtExcelForNl(lwtFilePath string, rows []model.ExcelColumnForLwt, sheet
 
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("A%d", rowNumber), row.ItemNumber, style)
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("B%d", rowNumber), row.ProductNo, style)
-			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("C%d", rowNumber), row.Description, style)
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("C%d", rowNumber), row.Description.String, style)
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("D%d", rowNumber), row.Quantity, style)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("E%d", rowNumber), row.NetWeight, styleFormula)
@@ -858,7 +858,7 @@ func fillLwtExcelForBeIncProfit(lwtFilePath string, rows []model.ExcelColumnForL
 
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("A%d", rowNumber), row.ItemNumber, style)
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("B%d", rowNumber), row.ProductNo, style)
-			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("C%d", rowNumber), row.Description, style)
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("C%d", rowNumber), row.Description.String, style)
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("D%d", rowNumber), row.Quantity, style)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("E%d", rowNumber), row.NetWeight, styleFormula)
@@ -992,7 +992,7 @@ func fillLwtExcelForBe(lwtFilePath string, rows []model.ExcelColumnForLwt, sheet
 
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("A%d", rowNumber), row.ItemNumber, style)
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("B%d", rowNumber), row.ProductNo, style)
-			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("C%d", rowNumber), row.Description, style)
+			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("C%d", rowNumber), row.Description.String, style)
 			err = addStringCellForSheet(f, sheetName, fmt.Sprintf("D%d", rowNumber), row.Quantity, style)
 
 			err = addFloatCellForSheet(f, sheetName, fmt.Sprintf("E%d", rowNumber), row.NetWeight, styleFormula)
